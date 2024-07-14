@@ -1,31 +1,32 @@
-from django.shortcuts import render, get_object_or_404
-from .models import Vaccine
+from django.shortcuts import render
 from django.views import View
+from vaccine.models import Vaccine
 from django.http import Http404, HttpResponseRedirect
-from .forms import VaccineForm
+from vaccine.forms import VaccineForm
 from django.urls import reverse
+from django.shortcuts import get_object_or_404
 
-# Create your views here.
+
 class VaccineList(View):
     def get(self, request):
         vaccine_list = Vaccine.objects.all()
         context = {
-            "object_list" : vaccine_list,
+            "object_list": vaccine_list
         }
         return render(request, "vaccine/vaccine-list.html", context)
-    
-class VaccineDetails(View):
+
+
+class VaccineDetail(View):
     def get(self, request, id):
         try:
-            vaccine = Vaccine.objects.get(id = id)
+            vaccine = Vaccine.objects.get(id=id)
         except Vaccine.DoesNotExist:
-            raise Http404("Vaccine not Found")
+            raise Http404("Vaccine instance not found")
         
         context = {
-            "object" : vaccine,
+            "object": vaccine,
         }
-
-        return render(request, "vaccine/vaccine-details.html", context)
+        return render(request, "vaccine/vaccine-detail.html", context)
     
 class CreateVaccine(View):
     form_class = VaccineForm
@@ -33,7 +34,7 @@ class CreateVaccine(View):
 
     def get(self, request):
         context = {
-            "form" : self.form_class
+            "form": self.form_class
         }
         return render(request, self.template_name, context)
     
@@ -42,37 +43,39 @@ class CreateVaccine(View):
         if form.is_valid():
             form.save()
             return HttpResponseRedirect(reverse("vaccine:list"))
-        return render(request, self.template_name, {"form" : form})
-    
+        return render(request, self.template_name, {"form": form})
+
+
 class UpdateVaccine(View):
     form_class = VaccineForm
     template_name = "vaccine/update-vaccine.html"
 
     def get(self, request, id):
-        vaccine = get_object_or_404(Vaccine, id = id)
+        vaccine = get_object_or_404(Vaccine, id=id)
         context = {
-            "form" : self.form_class(instance = vaccine),
+            "form": self.form_class(instance=vaccine),
         }
         return render(request, self.template_name, context)
     
     def post(self, request, id):
-        vaccine = get_object_or_404(Vaccine, id = id)
-        form = self.form_class(request.POST, instance = vaccine)
+        vaccine = get_object_or_404(Vaccine, id=id)
+        form = self.form_class(request.POST, instance=vaccine)
         if form.is_valid():
             form.save()
-            return HttpResponseRedirect(reverse("vaccine:details", kwargs= {"id" : id}))
-        return render(request, self.template_name, {"form" : form})
-    
+            return HttpResponseRedirect(reverse("vaccine:detail", kwargs={"id": vaccine.id}))
+        return render(request, self.template_name, {"form": form})
+
+
 class DeleteVaccine(View):
     template_name = "vaccine/delete-vaccine.html"
 
     def get(self, request, id):
-        vaccine = get_object_or_404(Vaccine, id = id)
+        vaccine = get_object_or_404(Vaccine, id=id)
         context = {
-            "object" : vaccine,
+            "object": vaccine
         }
         return render(request, self.template_name, context)
     
     def post(self, request, id):
-        Vaccine.objects.filter(id = id).delete()
+        Vaccine.objects.filter(id=id).delete()
         return HttpResponseRedirect(reverse("vaccine:list"))

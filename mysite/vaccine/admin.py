@@ -1,4 +1,4 @@
 from django.contrib import admin
-from .models import Vaccine
-# Register your models here.
+from vaccine.models import Vaccine
+
 admin.site.register(Vaccine)

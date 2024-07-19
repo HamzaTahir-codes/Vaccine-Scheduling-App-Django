@@ -1,3 +1,48 @@
+from typing import Any
 from django.shortcuts import render
+from django.views import generic
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from .models import Campaign
+from vaccination.models import Vaccination
+from .forms import CampaignForm
+from django.contrib.messages.views import SuccessMessageMixin
+from django.urls import reverse_lazy
 
-# Create your views here.
+
+class CampaignList(LoginRequiredMixin, generic.ListView):
+    model =  Campaign
+    template_name = "campaign/campaign-list.html"
+    paginate_by = 10
+    ordering = ["-id"]
+
+class CampaignDetailView(LoginRequiredMixin, generic.DetailView):
+    model = Campaign
+    template_name = "campaign/campaign-detail.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["registration"] = Vaccination.objects.filter(campaign = self.kwargs["pk"]).count()
+        return context
+    
+class CreateCampaign(LoginRequiredMixin, PermissionRequiredMixin, SuccessMessageMixin, generic.CreateView):
+    model = Campaign
+    form_class = CampaignForm
+    template_name = "campaign/campaign-create.html"
+    permission_required = ("campaign.add_campaign",)
+    success_message = "Campaign Created Successfully"
+    success_url = reverse_lazy("campaign:campaign-list")
+
+class UpdateCampaign(LoginRequiredMixin, PermissionRequiredMixin, SuccessMessageMixin, generic.UpdateView):
+    model = Campaign
+    form_class = CampaignForm
+    template_name = "campaign/campaign-update.html"
+    permission_required = ("campaign.change_campaign",)
+    success_message = "Campaign Updated Successfully!"
+    success_url = reverse_lazy("campaign:campaign-list")
+
+class DeleteCampaign(LoginRequiredMixin, PermissionRequiredMixin, SuccessMessageMixin, generic.DeleteView):
+    model = Campaign
+    template_name = "campaign/campaign-delete.html"
+    permission_required = ("campaign.delete_campaign",)
+    success_message = "Campaign Deleted Successfully!"
+    success_url = reverse_lazy("campaign:campaign-list")
